@@ -12,18 +12,21 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     email = Column(String)
+    telegram_id = Column(Integer, unique=True)
     def __repr__(self):
         return f"<User(name='{self.name}'>"
 
+Base.metadata.drop_all(engine) # just for now to avoid problems with unique id's after reloads. than instead of the UniqueException redirection to the /login endpoint may be implemented
 Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def already_registered(name:str, email:str):
-    stmt = select(User).where(User.name == name and User.email == email)
-    result = session.execute(stmt)
-    if len([i for i in result.scalars()]) > 0:
-        return True
-    return False
-
+def already_registered(name: str, email: str, telegram_id: int):
+    stmt = select(User).where(
+        (User.name == name) & #type: ignore
+        (User.email == email) &
+        (User.telegram_id == telegram_id)
+    )
+    result = session.execute(stmt).scalars().all()
+    return len(result) > 0
