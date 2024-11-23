@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Результаты поиска билетов</title>
+    <style>
+        .flight_rectangle {
+            border: 10px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .flight_rectangle h3 {
+            font-size: 20px;
+            color: #333;
+        }
+        .flight_rectangle p {
+            font-size: 16px;
+            color: #666
+        }
+    </style>
+</head>
+<body>
+    <h1>Результаты поиска:</h1>
+    <div id="results">
+        {{ flight_rectangles | safe }}
+    </div>
+</body>
+</html>

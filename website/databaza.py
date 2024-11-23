@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, select
+from sqlalchemy import create_engine, Column, Integer, String, select, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -7,16 +7,26 @@ engine = create_engine(DATABASE_URL)
 
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     name = Column(String)
     email = Column(String)
-    telegram_id = Column(Integer, unique=True)
+    telegram_id = Column(Integer)
     def __repr__(self):
         return f"<User(name='{self.name}'>"
 
-Base.metadata.drop_all(engine) # just for now to avoid problems with unique id's after reloads. than instead of the UniqueException redirection to the /login endpoint may be implemented
+
+class TRequest(Base):
+    __tablename__ = "t_request"
+    request_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    from_city = Column(String)
+    to_city = Column(String)
+    date = Column(String)
+
+
 Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
@@ -30,3 +40,4 @@ def already_registered(name: str, email: str, telegram_id: int):
     )
     result = session.execute(stmt).scalars().all()
     return len(result) > 0
+

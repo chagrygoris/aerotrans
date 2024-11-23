@@ -12,3 +12,11 @@ def send_welcome_message(user_id, name):
         print(f"Message sent to {user_id}")
     else:
         print(f"Failed to send message to {user_id}, status code {response.status_code}")
+def send_request(user_id, fr: str, to: str, date: str):
+    message = f"Ваш запрос: {fr} {to} {date}"
+    url = f'https://api.telegram.org/bot{TELEGRAM_API_TOKEN}/sendMessage'
+    payload = {
+        'chat_id': user_id,
+        'text': message
+    }
+    requests.post(url, data=payload)
