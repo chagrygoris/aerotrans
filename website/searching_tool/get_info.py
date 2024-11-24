@@ -49,7 +49,7 @@ async def suggest(city:str):
     print(res[1][0])
     return res[1][0]
 async def get_flight_data2(departure:str, destination:str, date:str):
-    departure_id = await suggest(departure)s
+    departure_id = await suggest(departure)
     destination_id = await suggest(destination)
     departure_id, destination_id = departure_id[0], destination_id[0]
     date = '2024-11-24'
