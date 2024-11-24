@@ -1,3 +1,14 @@
+import asyncio
+import os
+import aiohttp
+import certifi
+from yarl import URL
+import yaml
+
+os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+os.environ["SSL_CERT_FILE"] = certifi.where()
+apikey = '28e3cb6e-cc7b-4d8a-b64c-8a52a70365fc'
+
 def get_flight_data():
     return [
         {"from_city": "New York", "to_city": "London", "date": "2024-12-25", "price": "$500",
@@ -21,3 +32,33 @@ def get_flight_data():
         {"from_city": "Houston", "to_city": "Sydney", "date": "2024-12-24", "price": "$1100",
          "airline": "Qantas Airways", "flight_time": "14h 10m"}
     ]
+
+async def get_suggestion(city:str):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f'https://suggests.rasp.yandex.net/all_suggests?format=old&part=<{city}>') as resp:
+            res = await resp.json()
+    return res
+
+async def fetch_data(url:str):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            return await resp.json()
+
+async def suggest(city:str):
+    res = await get_suggestion(city)
+    print(res[1][0])
+    return res[1][0]
+async def get_flight_data2(departure:str, destination:str, date:str):
+    departure_id = await suggest(departure)s
+    destination_id = await suggest(destination)
+    departure_id, destination_id = departure_id[0], destination_id[0]
+    date = '2024-11-24'
+    url = str(URL(f'''
+        https://api.rasp.yandex.net/v3.0/search/?apikey={apikey}&from={departure_id}&to={destination_id}&format=json&lang=ru_RU&date={date}
+    '''))
+    res = await fetch_data(url)
+    print(yaml.dump(res, allow_unicode=True, default_flow_style=False))
+
+
+if __name__ == '__main__':
+    asyncio.run(get_flight_data2('Сочи', 'Новосибирск', ''))
