@@ -1,12 +1,11 @@
 import logging
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from databaza import session, User, already_registered, TRequest
-from fastapi import Request, Query
 
 from searching_tool.get_info import get_flight_data
 from searching_tool.view_results import create_rectangles

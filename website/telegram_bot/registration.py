@@ -20,3 +20,4 @@ def send_request(user_id, fr: str, to: str, date: str):
         'text': message
     }
     requests.post(url, data=payload)
+
