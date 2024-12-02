@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+</head>
+<body>
+    <h1>Ваша корзина</h1>
+    <div id="cart-items">
+        {% if cart %}
+        <ul>
+            {% for flight in cart %}
+                <li>
+                    {{ flight.origin }} to {{ flight.destination }}
+                    - Вылет {{ flight.departure_time }}
+                    - Цена: ${{ flight.price }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Разум чист, корзина пуста</p>
+    {% endif %}
+    </div>
+
+    <a href="/search">Продолжите выбор</a>
+</body>

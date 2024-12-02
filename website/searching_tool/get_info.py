@@ -6,9 +6,10 @@ import certifi
 from yarl import URL
 import yaml
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+from databaza import TFlight, session
 
 load_dotenv()
-
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 os.environ["SSL_CERT_FILE"] = certifi.where()
 # apikey = '28e3cb6e-cc7b-4d8a-b64c-8a52a70365fc'
@@ -16,28 +17,40 @@ apikey = os.getenv('YANDEX_RASP_API_KEY')
 mock_res = dict()
 
 def get_flight_data():
-    return [
-        {"from_city": "New York", "to_city": "London", "date": "2024-12-25", "price": "$500",
-         "airline": "Delta Airlines", "flight_time": "7h 45m"},
-        {"from_city": "Paris", "to_city": "Tokyo", "date": "2024-12-26", "price": "$800", "airline": "Air France",
-         "flight_time": "11h 30m"},
-        {"from_city": "Los Angeles", "to_city": "Sydney", "date": "2024-12-30", "price": "$1200",
-         "airline": "Qantas Airways", "flight_time": "15h 10m"},
-        {"from_city": "Berlin", "to_city": "Tokyo", "date": "2024-12-27", "price": "$600", "airline": "Lufthansa",
-         "flight_time": "9h 50m"},
-        {"from_city": "San Francisco", "to_city": "London", "date": "2024-12-28", "price": "$550",
-         "airline": "British Airways", "flight_time": "10h 30m"},
-        {"from_city": "Toronto", "to_city": "Paris", "date": "2024-12-29", "price": "$650", "airline": "Air Canada",
-         "flight_time": "7h 20m"},
-        {"from_city": "Madrid", "to_city": "Dubai", "date": "2024-12-31", "price": "$750", "airline": "Emirates",
-         "flight_time": "6h 50m"},
-        {"from_city": "Los Angeles", "to_city": "New York", "date": "2024-12-26", "price": "$300",
-         "airline": "American Airlines", "flight_time": "5h 30m"},
-        {"from_city": "Chicago", "to_city": "Tokyo", "date": "2024-12-25", "price": "$950",
-         "airline": "United Airlines", "flight_time": "13h 45m"},
-        {"from_city": "Houston", "to_city": "Sydney", "date": "2024-12-24", "price": "$1100",
-         "airline": "Qantas Airways", "flight_time": "14h 10m"}
+    flights = [
+        TFlight(
+            origin="Москва",
+            destination="Минск",
+            departure_time=datetime(2024, 12, 15, 14, 30),
+            price=200.50
+        ),
+        TFlight(
+            origin="Минск",
+            destination="Санкт-Питербург",
+            departure_time=datetime(2024, 12, 16, 9, 0),
+            price=150.00
+        ),
+        TFlight(
+            origin="Москва",
+            destination="Москва",
+            departure_time=datetime(2024, 12, 17, 16, 45),
+            price=180.75
+        ),
+        TFlight(
+            origin="Miami",
+            destination="New York",
+            departure_time=datetime(2024, 12, 18, 11, 30),
+            price=220.00
+        ),
+        TFlight(
+            origin="San Francisco",
+            destination="New York",
+            departure_time=datetime(2024, 12, 19, 20, 0),
+            price=250.00
+        )
     ]
+    session.add_all(flights)
+    session.commit()
 
 async def get_suggestion(city:str):
     async with aiohttp.ClientSession() as session:

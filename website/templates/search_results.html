@@ -1,33 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Результаты поиска билетов</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты поиска</title>
     <style>
-        .flight_rectangle {
-            border: 10px solid #ccc;
-            padding: 20px;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+        .cart {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 50px;
+            height: 50px;
+            background-color: #4da3f8;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .flight_rectangle h3 {
-            font-size: 20px;
-            color: #333;
+
+        .cart:hover {
+            background-color: #f0a341;
         }
-        .flight_rectangle p {
-            font-size: 16px;
-            color: #666
+        .flight-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            width: 250px;
+            box-sizing: border-box;
+        }
+
+        .flight-card button {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Результаты поиска:</h1>
-    <div id="results">
-        {{ flight_rectangles | safe }}
+    <h1>Результаты поиска</h1>
+    <div class="cart" onclick="window.location='/search/cart'">
+        {{ request.session.get("cart_length") }}
     </div>
+
+    <div id="flights-list">
+        {% if flight_rectangles %}
+            {% for flight in flight_rectangles %}
+                <div class="flight-card" id="flight-{{ flight.id }}">
+                    <h3>{{ flight.origin }} -> {{ flight.destination }}</h3>
+                    <p>Дата вылета: {{ flight.departure_time }}</p>
+                    <p>Цена: {{ flight.price }}</p>
+                    <form action="/add_to_cart" method="post">
+                        <input type="hidden" name="flight_id" value="{{ flight.id }}">
+                        <button type="submit">Добавить в корзину</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Нет доступных рейсов</p>
+        {% endif %}
+    </div>
+    <a href="/search">Продолжите выбор</a>
+
 </body>
 </html>

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, select, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, DateTime, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -6,6 +6,8 @@ DATABASE_URL = "sqlite:///users.db"
 engine = create_engine(DATABASE_URL)
 
 Base = declarative_base()
+
+
 
 
 class User(Base):
@@ -26,11 +28,32 @@ class TRequest(Base):
     to_city = Column(String)
     date = Column(String)
 
+class TFlight(Base):
+    __tablename__ = "t_flights"
+    flight_id = Column(Integer, primary_key=True, index=True)
+    origin = Column(String)
+    destination = Column(String)
+    departure_time = Column(DateTime)
+    arrival_time = Column(DateTime)
+    price = Column(Float)
+    company = Column(String)
+    class Config:
+        orm_mode = True
 
-Base.metadata.create_all(engine)
+class TCart(Base):
+    __tablename__ = "t_cart"
+    cart_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    flight_id = Column(Integer, ForeignKey("t_flights.flight_id"))
+
+Base.metadata.drop_all(bind= engine)
+Base.metadata.create_all(bind= engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
+
+
+
 
 def already_registered(name: str, email: str, telegram_id: int):
     stmt = select(User).where(
