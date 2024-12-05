@@ -26,7 +26,7 @@ def get_flight_data():
         ),
         TFlight(
             origin="Минск",
-            destination="Санкт-Питербург",
+            destination="Санкт-Пeтербург",
             departure_time=datetime(2024, 12, 16, 9, 0),
             price=150.00
         ),
