@@ -2,6 +2,8 @@ import logging
 from fastapi import FastAPI, Form, Request, Query, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+import bcrypt
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session, sessionmaker
@@ -13,6 +15,7 @@ from searching_tool.view_results import create_rectangles
 
 logging.basicConfig(filename='logs', filemode='w')
 logging.getLogger().setLevel(logging.INFO)
+
 from telegram_bot import registration
 
 
@@ -29,24 +32,45 @@ class UserRequest(BaseModel):
     age: int
     telegram_id: int
 
-
-@app.get('/')
+@app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
-
-
+    user_name = request.session.get("name")
+    if user_name:
+        return templates.TemplateResponse("home.html", {
+            "request": request,
+            "user_name": user_name
+        })
+    else:
+        return templates.TemplateResponse("home.html", {
+            "request": request,
+            "user_name": None
+        })
+    
 @app.get("/sign_up", response_class=HTMLResponse)
 async def sign_up(request: Request):
-    return templates.TemplateResponse("form.html", {
-        "request": request
-    })
+    if request.session.get("name") and request.session.get("email"):
+        return RedirectResponse(url="/search")
+    return templates.TemplateResponse("form.html", {"request": request})
 
 
 @app.post("/sign_up", response_class=HTMLResponse)
-async def register_user(request: Request, name: str = Form(), email: str = Form()):
-    request.session["name"] = name
-    request.session["email"] = email
+async def register_user(request: Request, name: str = Form(), email: str = Form(), password: str = Form()):
+    if session.query(User).filter_by(email=email).first():
+        return templates.TemplateResponse("form.html", {
+            "request": request,
+            "error": "Пользователь с таким email уже существует. Пожалуйста, войдите."
+        }, status_code=400)
+        
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+    user = User(name=name, email=email, password=hashed_password)
+    session.add(user)
+    session.commit()
+    request.session["name"] = user.name
+    request.session["email"] = user.email
+
     return RedirectResponse(url="/sign_up/tg", status_code=303)
+
 
 @app.get("/sign_up/tg", response_class=HTMLResponse)
 async def telegram_widget(request: Request):
@@ -62,39 +86,83 @@ async def telegram_widget(request: Request):
 @app.get("/sign_up/telegram", response_class=HTMLResponse)
 async def telegram_auth(request: Request, id: int = Query(...)):
     telegram_id = id
-    request.session["telegram_id"] = telegram_id
     name = request.session.get("name")
     email = request.session.get("email")
-    if already_registered(name, email, telegram_id): # optional as it duplicates unique=True in telegram_id Column
-        return HTMLResponse(status_code=404, content="Bad Request")
-    user = User(name=name, email=email, telegram_id=telegram_id)
-    session.add(user)
+    if not name or not email:
+        return RedirectResponse(url="/sign_up")
+
+    user = session.query(User).filter_by(name=name, email=email).first()
+    if not user:
+        return HTMLResponse("User not found", status_code=404)
+    
+    user.telegram_id = telegram_id
     session.commit()
-    logging.info(f"User {name} with email {email} and Telegram ID {telegram_id} has signed up")
     registration.send_welcome_message(user.telegram_id, user.name)
     return RedirectResponse(url="/search")
+
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    if request.session.get("name") and request.session.get("email"):
+        return RedirectResponse(url="/search")
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.post("/login", response_class=HTMLResponse)
+async def login_user(request: Request, email: str = Form(...), password: str = Form(...)):
+    user = session.query(User).filter_by(email=email).first()
+    if not user or not bcrypt.checkpw(password.encode("utf-8"), user.password):
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "Неверный email или пароль"
+        }, status_code=401)
+        
+    request.session["name"] = user.name
+    request.session["email"] = email
+    return RedirectResponse(url="/search", status_code=303)
+
+
 @app.get("/search", response_class=HTMLResponse)
 async def search_form(request: Request):
-    return templates.TemplateResponse("search_form.html", {
-        "request": request
-    })
+    if not request.session.get("name") or not request.session.get("email"):
+        return RedirectResponse(url="/", status_code=303)
+    return templates.TemplateResponse("search_form.html", {"request": request})
+
+
+@app.get("/logout", response_class=HTMLResponse)
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/")
+
 
 @app.post("/search", response_class=HTMLResponse)
 async def user_request(request: Request, fr: str = Form(), to: str = Form(), date: str = Form()):
+    name = request.session.get("name")
+    email = request.session.get("email")
+
+    if not name or not email:
+        return RedirectResponse(url="/", status_code=303)
+
+    user = session.query(User).filter_by(name=name, email=email).first()
+    if not user:
+        return HTMLResponse("User not found. Please log in again.", status_code=401)
+
     request.session["from_city"] = fr
     request.session["to_city"] = to
-    user = session.query(User).filter_by(name=request.session.get("name"), email=request.session.get("email")).first()
-    new_request = TRequest(user_id = user.id, from_city=fr, to_city=to, date=date)
+
+    new_request = TRequest(user_id=user.id, from_city=fr, to_city=to, date=date)
     session.add(new_request)
     session.commit()
-    logging.info(f"User {request.session.get('name')} made a new request: {fr} : {to} : {date}")
+    logging.info(f"User {name} made a new request: {fr} : {to} : {date}")
     last_request = session.query(TRequest).filter_by(user_id=user.id).order_by(TRequest.request_id.desc()).first()
     registration.send_request(user.telegram_id, last_request.from_city, last_request.to_city, last_request.date)
+
     if not session.query(TFlight).filter_by(origin=fr, destination=to).first():
         get_flight_data()
+
     flight_rectangles = create_rectangles(request.session.get("from_city"), request.session.get("to_city"), session)
     request.session["flight_rectangles"] = flight_rectangles
     return RedirectResponse(url="/search/results")
+
 
 @app.post("/search/results", response_class=HTMLResponse)
 async def search_results(request: Request):
@@ -116,6 +184,7 @@ async def add_to_cart(request: Request, flight_id: int = Form(...)):
         session.commit()
         request.session["cart_length"] = session.query(TCart).count()
     return RedirectResponse(url="/search/results")
+
 @app.get("/search/cart", response_class=HTMLResponse)
 async def cart(request: Request):
     user = session.query(User).filter_by(name=request.session.get("name"), email=request.session.get("email")).first()

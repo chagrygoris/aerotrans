@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float, DateTime, select
+from sqlalchemy.types import LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -15,6 +16,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     email = Column(String)
+    password = Column(LargeBinary)
     telegram_id = Column(Integer)
     def __repr__(self):
         return f"<User(name='{self.name}'>"
@@ -55,12 +57,11 @@ session = Session()
 
 
 
-def already_registered(name: str, email: str, telegram_id: int):
+def already_registered(name: str, email: str, telegram_id: int) -> bool:
     stmt = select(User).where(
-        (User.name == name) & #type: ignore
+        (User.name == name) &  # type: ignore
         (User.email == email) &
         (User.telegram_id == telegram_id)
     )
-    result = session.execute(stmt).scalars().all()
-    return len(result) > 0
+    return session.execute(stmt).first() is not None
 

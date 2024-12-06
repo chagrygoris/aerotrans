@@ -1,29 +1,38 @@
 <!DOCTYPE HTML>
-<html lang="ru"></html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Поиск билетов</title>
 </head>
 <body>
     <h1>Поиск билетов</h1>
+    <p>Добро пожаловать, {{ request.session.get("name") }}!</p>
     <form method="post" action="/search">
         <label for="fr">Откуда:</label>
         <select id="fr" name="fr" required>
-            <option value="" disabled selected> Выберите пункт отправления></option>
+            <option value="" disabled selected>Выберите пункт отправления</option>
             <option value="Москва">Москва</option>
-            <option value="Cанкт-Петербург">Санкт-Петербург</option>
+            <option value="Санкт-Петербург">Санкт-Петербург</option>
             <option value="Минск">Минск</option>
-        </select><br><br>
+        </select>
+        <br><br>
         <label for="to">Куда:</label>
         <select id="to" name="to" required>
-            <option value="" disabled selected> Выберите пункт отправления></option>
+            <option value="" disabled selected>Выберите пункт назначения</option>
             <option value="Москва">Москва</option>
-            <option value="Cанкт-Петербург">Санкт-Петербург</option>
+            <option value="Санкт-Петербург">Санкт-Петербург</option>
             <option value="Минск">Минск</option>
-        </select><br><br>
+        </select>
+        <br><br>
         <label for="date">Дата:</label>
-        <input type="date" id="date" name="date" required><br><br>
+        <input type="date" id="date" name="date" required>
+        <br><br>
         <button type="submit">Поиск</button>
     </form>
-</body>
 
+    <br>
+    <form method="get" action="/logout">
+        <button type="submit">Выйти</button>
+    </form>
+</body>
+</html>
