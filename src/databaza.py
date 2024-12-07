@@ -3,7 +3,7 @@ from sqlalchemy.types import LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite:///users.db"
+DATABASE_URL = "sqlite:///../users.db"
 engine = create_engine(DATABASE_URL)
 
 Base = declarative_base()
@@ -56,12 +56,4 @@ session = Session()
 
 
 
-
-def already_registered(name: str, email: str, telegram_id: int) -> bool:
-    stmt = select(User).where(
-        (User.name == name) &  # type: ignore
-        (User.email == email) &
-        (User.telegram_id == telegram_id)
-    )
-    return session.execute(stmt).first() is not None
 

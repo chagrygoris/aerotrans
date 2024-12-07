@@ -6,26 +6,15 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 import os, logging, asyncio, sys, dotenv
-from website.searching_tool.get_info import compile_message
-from openai import OpenAI
+from adapters.y_rasp import compile_message
+from src.constants import help_message
+from config import Config
 dotenv.load_dotenv()
 
 text_router = Router()
 
 dp = Dispatcher()
 
-def p():
-    client = OpenAI()
-
-    completion = client.chat.completions.create(
-        model='gpt-3.5-turbo',
-        messages=[
-            {
-                'role': 'user', 'content': 'what model am i using?'
-            }
-        ]
-    )
-    print(completion)
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -37,8 +26,7 @@ async def command_start_handler(message: Message) -> None:
 
 @dp.message(Command("help"))
 async def helper(message: Message):
-    with open('help_message', 'r') as f:
-        await message.answer(f.read())
+    await message.answer(help_message)
 
 
 route_router = Router()
@@ -49,16 +37,15 @@ async def routefinder(message: Message, command: CommandObject):
     commands = command.args
     departure, destination = commands.split()
     await message.answer(f"Finding routes {departure} ---> {destination}")
-    await message.answer(str(await compile_message(departure, destination, '2024-11-30')))
+    await message.answer(str(await compile_message(departure, destination, '2024-12-9')))
 
 
 async def bot_main() -> None:
     # Initialize Bot instance with default bot properties which will be passed to all API calls
-    bot = Bot(token=os.getenv('TELEGRAM_API_KEY'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(token=Config.TELEGRAM_KEY, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     # And the run events dispatching
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    # p()
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(bot_main())

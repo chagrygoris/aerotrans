@@ -8,15 +8,16 @@ from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session, sessionmaker
 
-from databaza import session, User, already_registered, TRequest, TFlight, TCart
+from src.databaza import session, User, TRequest, TFlight, TCart
+from src.checkers import already_registered, have_saved_routes
 
-from searching_tool.get_info import get_flight_data
-from searching_tool.view_results import create_rectangles
+from adapters.y_rasp import get_flight_data
+from adapters.view_results import create_rectangles
 
 logging.basicConfig(filename='logs', filemode='w')
 logging.getLogger().setLevel(logging.INFO)
 
-from telegram_bot import registration
+from bot import registration
 
 
 
@@ -156,8 +157,9 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
     last_request = session.query(TRequest).filter_by(user_id=user.id).order_by(TRequest.request_id.desc()).first()
     registration.send_request(user.telegram_id, last_request.from_city, last_request.to_city, last_request.date)
 
-    if not session.query(TFlight).filter_by(origin=fr, destination=to).first():
-        get_flight_data()
+
+    if not have_saved_routes(fr, to, date):
+        await get_flight_data(fr, to, date)
 
     flight_rectangles = create_rectangles(request.session.get("from_city"), request.session.get("to_city"), session)
     request.session["flight_rectangles"] = flight_rectangles
