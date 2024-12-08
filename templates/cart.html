@@ -14,7 +14,7 @@
                 <li>
                     {{ flight.origin }} to {{ flight.destination }}
                     - Вылет {{ flight.departure_time }}
-                    - Цена: ${{ flight.price }}
+                    - Цена: {{ flight.price }}
                 </li>
             {% endfor %}
         </ul>

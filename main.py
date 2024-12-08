@@ -1,30 +1,31 @@
 import logging
-from fastapi import FastAPI, Form, Request, Query, Depends
+from fastapi import FastAPI, Form, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import bcrypt
-from fastapi.exceptions import HTTPException
+import base64
+import os
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
-from src.databaza import session, User, TRequest, TFlight, TCart
-from src.checkers import already_registered, have_saved_routes
+from src import session, User, TRequest, TFlight, TCart
+from src import already_registered, have_saved_routes
 
-from adapters.y_rasp import get_flight_data
-from adapters.view_results import create_rectangles
+from adapters import get_flight_data, get_flight_data_test
+from adapters import create_rectangles
 
 logging.basicConfig(filename='logs', filemode='w')
 logging.getLogger().setLevel(logging.INFO)
 
-from bot import registration
+from bot import send_welcome_message, send_request
 
 
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
-app.add_middleware(SessionMiddleware, secret_key="your-secret-key") # pycharm глупенький!!!
+app.add_middleware(SessionMiddleware, secret_key="your-secret-key") #type: ignore
 SessionLocal = sessionmaker(autocommit=False, autoflush=False)
 
 
@@ -61,9 +62,8 @@ async def register_user(request: Request, name: str = Form(), email: str = Form(
             "request": request,
             "error": "Пользователь с таким email уже существует. Пожалуйста, войдите."
         }, status_code=400)
-        
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     user = User(name=name, email=email, password=hashed_password)
     session.add(user)
     session.commit()
@@ -71,7 +71,6 @@ async def register_user(request: Request, name: str = Form(), email: str = Form(
     request.session["email"] = user.email
 
     return RedirectResponse(url="/sign_up/tg", status_code=303)
-
 
 @app.get("/sign_up/tg", response_class=HTMLResponse)
 async def telegram_widget(request: Request):
@@ -84,6 +83,7 @@ async def telegram_widget(request: Request):
         "request": request
     })
 
+
 @app.get("/sign_up/telegram", response_class=HTMLResponse)
 async def telegram_auth(request: Request, id: int = Query(...)):
     telegram_id = id
@@ -91,14 +91,12 @@ async def telegram_auth(request: Request, id: int = Query(...)):
     email = request.session.get("email")
     if not name or not email:
         return RedirectResponse(url="/sign_up")
-
     user = session.query(User).filter_by(name=name, email=email).first()
     if not user:
         return HTMLResponse("User not found", status_code=404)
-    
     user.telegram_id = telegram_id
     session.commit()
-    registration.send_welcome_message(user.telegram_id, user.name)
+    send_welcome_message(user.telegram_id, user.name)
     return RedirectResponse(url="/search")
 
 
@@ -155,12 +153,11 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
     session.commit()
     logging.info(f"User {name} made a new request: {fr} : {to} : {date}")
     last_request = session.query(TRequest).filter_by(user_id=user.id).order_by(TRequest.request_id.desc()).first()
-    registration.send_request(user.telegram_id, last_request.from_city, last_request.to_city, last_request.date)
+    send_request(user.telegram_id, last_request.from_city, last_request.to_city, last_request.date)
 
 
     if not have_saved_routes(fr, to, date):
-        await get_flight_data(fr, to, date)
-
+        get_flight_data_test()
     flight_rectangles = create_rectangles(request.session.get("from_city"), request.session.get("to_city"), session)
     request.session["flight_rectangles"] = flight_rectangles
     return RedirectResponse(url="/search/results")
@@ -169,6 +166,7 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
 @app.post("/search/results", response_class=HTMLResponse)
 async def search_results(request: Request):
     flight_rectangles = request.session.get("flight_rectangles")
+    print(flight_rectangles)
     return templates.TemplateResponse("search_results.html", {
         "request": request,
         "flight_rectangles": flight_rectangles
