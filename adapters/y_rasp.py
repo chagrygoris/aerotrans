@@ -14,8 +14,7 @@ from config import Config
 load_dotenv()
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 os.environ["SSL_CERT_FILE"] = certifi.where()
-apikey = '28e3cb6e-cc7b-4d8a-b64c-8a52a70365fc'
-#apikey = Config.YANDEX_RASP_KEY
+apikey = Config.YANDEX_RASP_KEY
 
 async def get_flight_data(departure:str, destination:str, date:str):
     departure_id = await suggest(departure)
@@ -25,7 +24,6 @@ async def get_flight_data(departure:str, destination:str, date:str):
         https://api.rasp.yandex.net/v3.0/search/?apikey={apikey}&from={departure_id}&to={destination_id}&format=json&lang=ru_RU&date={date}
     '''))
     data = await fetch_data(url)
-    # print(json.dumps(data, indent=4))
     flights = []
     res_origin, res_arrival = '', ''
     for segment in data['segments']:

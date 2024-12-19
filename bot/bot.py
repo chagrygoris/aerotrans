@@ -1,3 +1,5 @@
+import datetime
+
 from aiogram import Bot, Dispatcher, html
 from aiogram.filters import CommandObject
 from aiogram import Router
@@ -34,10 +36,18 @@ dp.include_router(route_router)
 
 @route_router.message(Command("route"))
 async def routefinder(message: Message, command: CommandObject):
-    commands = command.args
-    departure, destination = commands.split()
+    commands = command.args.split()
+    departure, destination, date = '', '', ''
+    if len(commands) == 3:
+        departure, destination, date = commands
+    elif len(commands) == 2:
+        departure, destination = commands
+        date = datetime.datetime.today()
     await message.answer(f"Finding routes {departure} ---> {destination}")
-    await message.answer(str(await compile_message(departure, destination, '2024-12-9')))
+    await message.answer(str(await compile_message(departure, destination, date)))
+
+
+
 
 
 async def bot_main() -> None:
