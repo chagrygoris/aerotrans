@@ -2,6 +2,7 @@ import logging
 from fastapi import FastAPI, Form, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import bcrypt
 import base64
 import os
@@ -27,6 +28,8 @@ templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "t
 
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")  # type: ignore
 SessionLocal = sessionmaker(autocommit=False, autoflush=False)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 class UserRequest(BaseModel):

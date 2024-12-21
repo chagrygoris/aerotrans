@@ -1,19 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная страница</title>
+    <!-- Подключение стилей -->
+    <link rel="stylesheet" href="/static/style/style.css">
 </head>
 <body>
-    {% if user_name %}
-        <h1>Привет, {{ user_name }}!</h1>
-        <p>Вы уже вошли в систему.</p>
-        <a href="/search">Перейти к поиску</a> |
-        <a href="/logout">Выйти</a>
-    {% else %}
-        <h1>Добро пожаловать!</h1>
-        <p>Выберите действие:</p>
-        <a href="/sign_up">Зарегистрироваться</a> |
-        <a href="/login">Войти</a>
-    {% endif %}
+    <div class="container">
+        {% if user_name %}
+            <h1>Привет, {{ user_name }}!</h1>
+            <p>Вы уже вошли в систему.</p>
+            <div class="actions">
+                <a href="/search" class="button">Перейти к поиску</a>
+                <a href="/logout" class="button">Выйти</a>
+            </div>
+        {% else %}
+            <h1>Добро пожаловать!</h1>
+            <p>Выберите действие:</p>
+            <div class="actions">
+                <a href="/sign_up" class="button">Зарегистрироваться</a>
+                <a href="/login" class="button">Войти</a>
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>

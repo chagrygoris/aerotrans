@@ -3,36 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <title>Поиск билетов</title>
+    <link rel="stylesheet" href="/static/style/style.css">
 </head>
 <body>
-    <h1>Поиск билетов</h1>
-    <p>Добро пожаловать, {{ request.session.get("name") }}!</p>
-    <form method="post" action="/search">
-        <label for="fr">Откуда:</label>
-        <select id="fr" name="fr" required>
-            <option value="" disabled selected>Выберите пункт отправления</option>
-            <option value="Москва">Москва</option>
-            <option value="Санкт-Петербург">Санкт-Петербург</option>
-            <option value="Одинцово">Одинцово</option>
-        </select>
-        <br><br>
-        <label for="to">Куда:</label>
-        <select id="to" name="to" required>
-            <option value="" disabled selected>Выберите пункт назначения</option>
-            <option value="Москва">Москва</option>
-            <option value="Санкт-Петербург">Санкт-Петербург</option>
-            <option value="Одинцово">Одинцово</option>
-        </select>
-        <br><br>
-        <label for="date">Дата:</label>
-        <input type="date" id="date" name="date" required>
-        <br><br>
-        <button type="submit">Поиск</button>
-    </form>
+    <div class="container">
+        <h1>Поиск билетов</h1>
+        <p>Добро пожаловать, {{ request.session.get("name") }}!</p>
+        
+        <form method="post" action="/search">
+            <label for="fr">Откуда:</label>
+            <select id="fr" name="fr" required>
+                <option value="" disabled selected>Выберите пункт отправления</option>
+                <option value="Москва">Москва</option>
+                <option value="Санкт-Петербург">Санкт-Петербург</option>
+                <option value="Одинцово">Одинцово</option>
+            </select>
 
-    <br>
-    <form method="get" action="/logout">
-        <button type="submit">Выйти</button>
-    </form>
+            <label for="to">Куда:</label>
+            <select id="to" name="to" required>
+                <option value="" disabled selected>Выберите пункт назначения</option>
+                <option value="Москва">Москва</option>
+                <option value="Санкт-Петербург">Санкт-Петербург</option>
+                <option value="Одинцово">Одинцово</option>
+            </select>
+            
+            <label for="date">Дата:</label>
+            <input type="date" id="date" name="date" required>
+
+            <div class="button-container">
+                <button type="submit">Поиск</button>
+            </div>
+        </form>
+
+        <p>
+            <a href="/logout" class="logout-link">Выход из аккаунта</a>
+        </p>
+    </div>
 </body>
 </html>

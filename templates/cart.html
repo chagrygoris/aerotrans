@@ -4,24 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Cart</title>
+    <link rel="stylesheet" href="/static/style/style.css">
 </head>
 <body>
-    <h1>Ваша корзина</h1>
-    <div id="cart-items">
-        {% if cart %}
-        <ul>
-            {% for flight in cart %}
-                <li>
-                    {{ flight.origin }} to {{ flight.destination }}
-                    - Вылет {{ flight.departure_time }}
-                    - Цена: {{ flight.price }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Разум чист, корзина пуста</p>
-    {% endif %}
+    <div class="container">
+        <h1>Ваша корзина</h1>
+        <div id="cart-items">
+            {% if cart %}
+                <ul>
+                    {% for flight in cart %}
+                        <li class="cart-item">
+                            {{ flight.origin }} to {{ flight.destination }} - Вылет {{ flight.departure_time }} - Цена: {{ flight.price }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Разум чист, корзина пуста</p>
+            {% endif %}
+        </div>
+        <div class="actions">
+            <a href="/search" class="button">Продолжите выбор</a>
+        </div>
     </div>
-
-    <a href="/search">Продолжите выбор</a>
 </body>
+</html>
