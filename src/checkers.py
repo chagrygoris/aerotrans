@@ -13,8 +13,8 @@ def already_registered(name: str, email: str, telegram_id: int) -> bool:
 
 def have_saved_routes(origin: str, destination: str, date: str) -> bool | TFlight:
     res = session.query(TFlight).filter(
-        TFlight.origin.like(f"%{origin}%"),
-        TFlight.destination == destination).first()
+        TFlight.origin_city_code == origin,
+        TFlight.destination_city_code == destination).first()
     if not res:
         return False
     return res

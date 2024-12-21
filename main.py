@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from src import session, User, TRequest, TFlight, TCart
 from src import already_registered, have_saved_routes
 
-from adapters import get_flight_data, get_flight_data_test
+from adapters import get_flight_data
 from adapters import create_rectangles
 
 logging.basicConfig(filename='logs', filemode='w')
@@ -20,12 +20,12 @@ logging.getLogger().setLevel(logging.INFO)
 
 from bot import send_welcome_message, send_request
 
-
+from src import get_city
 
 app = FastAPI()
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
-app.add_middleware(SessionMiddleware, secret_key="your-secret-key") #type: ignore
+app.add_middleware(SessionMiddleware, secret_key="your-secret-key")  # type: ignore
 SessionLocal = sessionmaker(autocommit=False, autoflush=False)
 
 
@@ -33,6 +33,7 @@ class UserRequest(BaseModel):
     name: str
     age: int
     telegram_id: int
+
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -47,7 +48,8 @@ async def home(request: Request):
             "request": request,
             "user_name": None
         })
-    
+
+
 @app.get("/sign_up", response_class=HTMLResponse)
 async def sign_up(request: Request):
     if request.session.get("name") and request.session.get("email"):
@@ -71,6 +73,7 @@ async def register_user(request: Request, name: str = Form(), email: str = Form(
     request.session["email"] = user.email
 
     return RedirectResponse(url="/sign_up/tg", status_code=303)
+
 
 @app.get("/sign_up/tg", response_class=HTMLResponse)
 async def telegram_widget(request: Request):
@@ -106,6 +109,7 @@ async def login_page(request: Request):
         return RedirectResponse(url="/search")
     return templates.TemplateResponse("login.html", {"request": request})
 
+
 @app.post("/login", response_class=HTMLResponse)
 async def login_user(request: Request, email: str = Form(...), password: str = Form(...)):
     user = session.query(User).filter_by(email=email).first()
@@ -114,7 +118,7 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
             "request": request,
             "error": "Неверный email или пароль"
         }, status_code=401)
-        
+
     request.session["name"] = user.name
     request.session["email"] = email
     return RedirectResponse(url="/search", status_code=303)
@@ -147,6 +151,7 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
 
     request.session["from_city"] = fr
     request.session["to_city"] = to
+    request.session["date"] = date
 
     new_request = TRequest(user_id=user.id, from_city=fr, to_city=to, date=date)
     session.add(new_request)
@@ -154,19 +159,20 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
     logging.info(f"User {name} made a new request: {fr} : {to} : {date}")
     last_request = session.query(TRequest).filter_by(user_id=user.id).order_by(TRequest.request_id.desc()).first()
     send_request(user.telegram_id, last_request.from_city, last_request.to_city, last_request.date)
-
-
-    if not have_saved_routes(fr, to, date):
-        get_flight_data_test()
-    flight_rectangles = create_rectangles(request.session.get("from_city"), request.session.get("to_city"), session)
-    request.session["flight_rectangles"] = flight_rectangles
     return RedirectResponse(url="/search/results")
 
 
 @app.post("/search/results", response_class=HTMLResponse)
 async def search_results(request: Request):
-    flight_rectangles = request.session.get("flight_rectangles")
-    print(flight_rectangles)
+    fr = request.session.get("from_city")
+    to = request.session.get("to_city")
+    date = request.session.get("date")
+    from_city = await get_city(fr)
+    to_city = await get_city(to)
+    if not have_saved_routes(from_city, to_city, date):
+        await get_flight_data(fr, to, date)
+    flight_rectangles = await create_rectangles(request.session.get("from_city"), request.session.get("to_city"),
+                                                session)
     return templates.TemplateResponse("search_results.html", {
         "request": request,
         "flight_rectangles": flight_rectangles
@@ -184,6 +190,7 @@ async def add_to_cart(request: Request, flight_id: int = Form(...)):
         session.commit()
         request.session["cart_length"] = session.query(TCart).count()
     return RedirectResponse(url="/search/results")
+
 
 @app.get("/search/cart", response_class=HTMLResponse)
 async def cart(request: Request):

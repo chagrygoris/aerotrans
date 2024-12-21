@@ -8,7 +8,6 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 import os, logging, asyncio, sys, dotenv
-from adapters.y_rasp import compile_message
 from src.constants import help_message
 from config import Config
 dotenv.load_dotenv()
@@ -36,6 +35,7 @@ dp.include_router(route_router)
 
 @route_router.message(Command("route"))
 async def routefinder(message: Message, command: CommandObject):
+    from adapters import compile_message
     commands = command.args.split()
     departure, destination, date = '', '', ''
     if len(commands) == 3:

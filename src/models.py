@@ -2,8 +2,12 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Float
 from sqlalchemy.types import LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-DATABASE_URL = "sqlite:///../src/users.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_PATH = os.path.join(BASE_DIR, '../src/users.db')
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+
 engine = create_engine(DATABASE_URL)
 
 Base = declarative_base()
@@ -30,17 +34,31 @@ class TRequest(Base):
     to_city = Column(String)
     date = Column(String)
 
+class City(Base):
+    __tablename__ = "t_cities"
+    id = Column(Integer, primary_key=True, index=True)
+    city_name = Column(String, nullable=False)
+    yandex_code = Column(String, unique=True, nullable=False)
+
+    def __repr__(self):
+        return f"<City(name='{self.city_name}', yandex_code='{self.yandex_code}')>"
+
+
 class TFlight(Base):
     __tablename__ = "t_flights"
     flight_id = Column(Integer, primary_key=True, index=True)
-    origin = Column(String)
-    destination = Column(String)
+    origin_city_code = Column(String, ForeignKey("t_cities.yandex_code"))
+    destination_city_code = Column(String, ForeignKey("t_cities.yandex_code"))
+    origin_city_name = Column(String)
+    destination_city_name = Column(String)
     departure_time = Column(DateTime)
     arrival_time = Column(DateTime)
     price = Column(Float)
     company = Column(String)
-    class Config:
-        orm_mode = True
+
+    def __repr__(self):
+        return f"<TFlight(flight_id='{self.flight_id}', origin='{self.origin_city_name}', destination='{self.destination_city_name}')>"
+
 
 class TCart(Base):
     __tablename__ = "t_cart"
