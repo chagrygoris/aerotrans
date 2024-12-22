@@ -13,7 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from src import session, User, TRequest, TFlight, TCart
 from src import already_registered, have_saved_routes
 
-from adapters import get_flight_data
+from adapters import get_flight_data, format_datetime
 from adapters import create_rectangles
 
 logging.basicConfig(filename='logs', filemode='w')
@@ -221,7 +221,8 @@ async def add_to_cart(request: Request, flight_id: int = Form(...)):
         new_item = TCart(user_id=user.id, flight_id=selected_flight.flight_id)
         session.add(new_item)
         session.commit()
-        request.session["cart_length"] = session.query(TCart).count()
+        cart_length = session.query(TCart).filter(TCart.user_id == user.id).count()
+        request.session["cart_length"] = cart_length
     return RedirectResponse(url="/search/results")
 
 
@@ -236,5 +237,6 @@ async def cart(request: Request):
             flights.append(flight)
     return templates.TemplateResponse("cart.html", {
         "request": request,
-        "cart": flights
+        "cart": flights,
+        "format_datetime": format_datetime
     })

@@ -22,10 +22,10 @@
                                 {{ flight.destination_city_name }}
                             {% endif %}
                             {% if flight.departure_time %}
-                                - Отправление: {{ flight.departure_time }}
+                                - Отправление: {{ flight.departure_time.strftime('%d %B %Y, %H:%M') }}
                             {% endif %}
                             {% if flight.arrival_time %}
-                                - Прибытие: {{ flight.company }}
+                                - Прибытие: {{ flight.arrival_time.strftime('%d %B %Y, %H:%M') }}
                             {% endif %}
                             {% if flight.price %}
                                 - Цена: {{ flight.price }} ₽

@@ -36,6 +36,7 @@ async def create_rectangles(from_city: str, to_city: str, db: Session, limit: in
             "destination": flight.destination_city_name,
             "departure_time": departure_time_str,
             "arrival_time": arrival_time_str,
+            "transport_type": flight.transport_type,
             "price": flight.price
         })
     return flight_rectangles
