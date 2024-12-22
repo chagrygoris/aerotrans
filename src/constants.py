@@ -1,2 +1,9 @@
-help_message = '''/help to see available handlers\n/route A B to find routes from A to B\n/multiroute A_1 A_2 ... A_n to find routes from A_1 to A_n via A_2, A_3, ..., A_n-1'''
+help_message = '''
+/help - список доступных команд\n
+/route <i>откуда куда дата</i> - найти рейсы из А в В\n
+/choose <i>откуда куда дата</i> - перейти на сайт, чтобы посмотреть рейсы из А в B\n
+/cart - посмотреть, что лежит в корзине'''
 
+ending = '''\n\nИщите билеты на @AerotransBot!'''
+
+empty_cart_message = "Ваша корзина пуста"

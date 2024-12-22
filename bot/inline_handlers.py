@@ -1,7 +1,8 @@
 from aiogram import Router, html
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultDocument
 from src.models import session, TCart, TFlight, User
-from adapters import get_icon, format_datetime, compile_message
+from src.constants import ending, empty_cart_message
+from adapters import get_icon, format_datetime, compile_message, advertise
 from datetime import datetime
 
 
@@ -16,9 +17,6 @@ def is_date(dt:str):
 inline_router = Router()
 
 
-def stringify():
-    pass
-
 
 def describe_cart(user_id: int):
     try:
@@ -26,7 +24,7 @@ def describe_cart(user_id: int):
         cart_items = session.query(TCart, TFlight).join(TFlight, TCart.flight_id == TFlight.flight_id).filter(
             TCart.user_id == user_id).all()
         if not cart_items:
-            return "Ваша корзина пуста"
+            return empty_cart_message
         message = ''''''
         for i in range(len(cart_items)):
             item = cart_items[i][1]
@@ -79,8 +77,9 @@ async def inline_find_routes(inline_query: InlineQuery):
     results.append(InlineQueryResultArticle(
         id='2',
         title="I'm feeling lucky...",
+        thumbnail_url='https://avatars.dzeninfra.ru/get-zen_doc/271828/pub_656aad81c205fb172b747405_656aad86d352075c620f80c4/scale_1200',
         input_message_content=InputTextMessageContent(
-            message_text='TO DO'
+            message_text=advertise() + ending
         ),
         description='улететь за тридевять земель'
     ))
@@ -98,4 +97,7 @@ async def inline_find_routes(inline_query: InlineQuery):
 
 
 if __name__ == '__main__':
-    print(is_date('2024-11-21'))
+    # print(is_date('2024-11-21'))
+    from faker import Faker
+    f = Faker('ru_RU')
+    print(' '.join(f.city().split()[1:]))

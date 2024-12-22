@@ -104,7 +104,14 @@ async def compile_message(origin: str, destination: str, date: str) -> str:
         await get_flight_data(origin, destination, date)
         dep_code = await get_city(origin)
         dest_code = await get_city(destination)
-        results = session.query(TFlight).filter_by(origin_city_code=dep_code, destination_city_code=dest_code).all()
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
+        results = session.query(TFlight).filter(
+            TFlight.origin_city_code == dep_code,
+            TFlight.destination_city_code == dest_code,
+            TFlight.departure_time >= date_obj,
+            TFlight.departure_time < date_obj.replace(hour=23, minute=59, second=59)  # ограничение до конца дня
+        ).all()
+
     message = ''''''
     for i in range(min(5, len(results))):
         res = results[i]
