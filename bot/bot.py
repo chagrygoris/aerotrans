@@ -7,9 +7,11 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
+from src import session, User
 import os, logging, asyncio, sys, dotenv
 from src.constants import help_message
 from config import Config
+from fastapi import Request
 dotenv.load_dotenv()
 
 text_router = Router()
@@ -47,6 +49,28 @@ async def routefinder(message: Message, command: CommandObject):
     await message.answer(str(await compile_message(departure, destination, date)))
 
 
+
+@route_router.message(Command("choose"))
+async def choose_route(message: Message, command: CommandObject):
+    commands = command.args.split()
+    if len(commands) != 3:
+        await message.answer("Пожалуйста, отправьте команду в формате: /choose откуда куда дата")
+        return
+    departure, destination, date = commands
+    user_telegram_id = message.from_user.id
+    user = session.query(User).filter_by(telegram_id=user_telegram_id).first()
+    if not user:
+        await message.answer(
+            f"[Билеты из {departure} в {destination} уже ждут на сайте!](https://a5cf-185-200-105-117.ngrok-free.app/sign_up?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id})",
+            parse_mode="markdown"
+        )
+        return
+
+    search_url = f"https://a5cf-185-200-105-117.ngrok-free.app/search/results?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id}"
+    await message.answer(
+        f"[Билеты из {departure} в {destination} уже ждут на сайте!]({search_url})",
+        parse_mode="markdown"
+    )
 
 
 

@@ -52,16 +52,27 @@ async def home(request: Request):
             "user_name": None
         })
 
-
 @app.get("/sign_up", response_class=HTMLResponse)
-async def sign_up(request: Request):
-    if request.session.get("name") and request.session.get("email"):
-        return RedirectResponse(url="/search")
-    return templates.TemplateResponse("form.html", {"request": request})
-
+async def sign_up_form(request: Request, from_city: str = Query(None), to_city: str = Query(None),
+                       date: str = Query(None), telegram_id: int = Query(None)):
+    context = {
+        "request": request,
+    }
+    if from_city is not None:
+        context["from_city"] = from_city
+    if to_city is not None:
+        context["to_city"] = to_city
+    if date is not None:
+        context["date"] = date
+    if telegram_id is not None:
+        context["telegram_id"] = telegram_id
+    return templates.TemplateResponse("form.html", context)
 
 @app.post("/sign_up", response_class=HTMLResponse)
-async def register_user(request: Request, name: str = Form(), email: str = Form(), password: str = Form()):
+async def register_user(request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...),
+                        from_city: str = Form(None), to_city: str = Form(None), date: str = Form(None),
+                        telegram_id = Query(None)):
+    print(telegram_id, from_city, to_city)
     if session.query(User).filter_by(email=email).first():
         return templates.TemplateResponse("form.html", {
             "request": request,
@@ -70,13 +81,23 @@ async def register_user(request: Request, name: str = Form(), email: str = Form(
 
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     user = User(name=name, email=email, password=hashed_password)
+
+    if telegram_id:
+        user.telegram_id = telegram_id
+
     session.add(user)
     session.commit()
+
     request.session["name"] = user.name
     request.session["email"] = user.email
 
-    return RedirectResponse(url="/sign_up/tg", status_code=303)
+    if from_city and to_city and date:
+        request.session["from_city"] = from_city
+        request.session["to_city"] = to_city
+        request.session["date"] = date
+        return RedirectResponse(url="/search/results", status_code=303)
 
+    return RedirectResponse(url="/sign_up/tg", status_code=303)
 
 @app.get("/sign_up/tg", response_class=HTMLResponse)
 async def telegram_widget(request: Request):
@@ -166,18 +187,37 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
     return RedirectResponse(url="/search/results")
 
 
-@app.post("/search/results", response_class=HTMLResponse)
+@app.api_route("/search/results", methods=["GET", "POST"], response_class=HTMLResponse)
 async def search_results(request: Request):
-    fr = request.session.get("from_city")
-    to = request.session.get("to_city")
-    date = request.session.get("date")
-    limit = request.session.get("limit")
-    from_city = await get_city(fr)
-    to_city = await get_city(to)
-    if not have_saved_routes(from_city, to_city, date):
-        await get_flight_data(fr, to, date)
-    flight_rectangles = await create_rectangles(request.session.get("from_city"), request.session.get("to_city"),
-                                                session, limit)
+    if request.method == "GET":
+        from_city = request.query_params.get("from_city")
+        to_city = request.query_params.get("to_city")
+        date = request.query_params.get("date")
+        telegram_id = request.query_params.get("telegram_id")
+        print(telegram_id, "what do we see?")
+        request.session["from_city"] = from_city
+        request.session["to_city"] = to_city
+        request.session["date"] = date
+        user = session.query(User).filter_by(telegram_id=telegram_id).first()
+        request.session["name"] = user.name
+        request.session["email"] = user.email
+    else:
+        from_city = request.session.get("from_city")
+        to_city = request.session.get("to_city")
+        date = request.session.get("date")
+
+    if not from_city or not to_city or not date:
+        return templates.TemplateResponse("form.html", {
+            "request": request,
+            "error": "Не все необходимые параметры были предоставлены"
+        }, status_code=400)
+
+    limit = request.session.get("limit", 10)
+    from_city_db = await get_city(from_city)
+    to_city_db = await get_city(to_city)
+    if not have_saved_routes(from_city_db, to_city_db, date):
+        await get_flight_data(from_city, to_city, date)
+    flight_rectangles = await create_rectangles(from_city, to_city, session, limit)
     return templates.TemplateResponse("search_results.html", {
         "request": request,
         "flight_rectangles": flight_rectangles

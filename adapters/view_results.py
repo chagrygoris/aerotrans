@@ -10,7 +10,7 @@ def format_datetime(iso_datetime: str) -> str:
     dt = datetime.fromisoformat(iso_datetime)
     return dt.strftime("%d %B %Y, %H:%M")
 
-async def create_rectangles(from_city: str, to_city: str, db: Session, limit: int) -> List[dict]:
+async def create_rectangles(from_city: str, to_city: str, db: Session, limit: int=14) -> List[dict]:
     flight_rectangles = []
     departure_id = await suggest(from_city)
     destination_id = await suggest(to_city)
