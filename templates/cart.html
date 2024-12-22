@@ -14,7 +14,22 @@
                 <ul>
                     {% for flight in cart %}
                         <li class="cart-item">
-                            {{ flight.origin }} to {{ flight.destination }} - Вылет {{ flight.departure_time }} - Цена: {{ flight.price }}
+                            {% if flight.origin_city_name %}
+                                {{ flight.origin_city_name }}
+                            {% endif %}
+                            to
+                            {% if flight.destination_city_name %}
+                                {{ flight.destination_city_name }}
+                            {% endif %}
+                            {% if flight.departure_time %}
+                                - Отправление: {{ flight.departure_time }}
+                            {% endif %}
+                            {% if flight.arrival_time %}
+                                - Прибытие: {{ flight.company }}
+                            {% endif %}
+                            {% if flight.price %}
+                                - Цена: {{ flight.price }} ₽
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>

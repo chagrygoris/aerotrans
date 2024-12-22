@@ -57,17 +57,17 @@
         .flight-card {
             background: linear-gradient(to bottom, #4da3f8, #ffffff);
             border: 1px solid #ccc;
-            padding: 20px; 
-            width: 320px;  
-            height: 250px; 
+            padding: 20px;
+            width: 320px;
+            height: 300px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             text-align: center;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             transition: transform 0.2s;
-        }        
+        }
 
         .flight-card:hover {
             transform: translateY(-5px);
@@ -113,25 +113,24 @@
         .flight-card {
             width: calc(33% - 20px); /* Пример: 3 карточки в ряд с учетом отступов */
         }
-        
+
         @media (max-width: 768px) {
             .flight-card {
                 width: calc(50% - 20px); /* Пример: 2 карточки в ряд на мобильных устройствах */
             }
         }
-        
+
         @media (max-width: 480px) {
             .flight-card {
                 width: 100%; /* 1 карточка в ряд на маленьких экранах */
             }
-        }        
+        }
     </style>
 </head>
 <body>
-
     <h1>Результаты поиска</h1>
     <div class="cart" onclick="window.location='/search/cart'">
-        {{ request.session.get("cart_length") }}
+        {{ request.session.get("cart_length", 0) }}
     </div>
 
     <div id="flights-list">
@@ -139,8 +138,16 @@
             {% for flight in flight_rectangles %}
                 <div class="flight-card" id="flight-{{ flight.id }}">
                     <h3>{{ flight.origin }} → {{ flight.destination }}</h3>
-                    <p>{{ flight.departure_time }}</p>
-                    <p>{{ flight.price }} ₽</p> <!-- Добавлено обозначение валюты -->
+                    {% if flight.departure_time %}
+                        <p>Дата вылета: {{ flight.departure_time }}</p>
+                    {% endif %}
+                    {% if flight.arrival_time %}
+                        <p>Дата прибытия: {{ flight.arrival_time }}</p>
+                    {% endif %}
+                    {% if flight.price %}
+                        <p>Цена: {{ flight.price }} ₽</p>
+                    {% endif %}
+
                     <form action="/add_to_cart" method="post">
                         <input type="hidden" name="flight_id" value="{{ flight.id }}">
                         <button type="submit">Добавить в корзину</button>
@@ -153,7 +160,7 @@
             </div>
         {% endif %}
     </div>
-    
+
     <a href="/search">Продолжите выбор</a>
 
 </body>

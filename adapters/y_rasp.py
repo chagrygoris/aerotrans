@@ -25,7 +25,6 @@ async def get_flight_data(departure: str, destination: str, date: str):
         https://api.rasp.yandex.net/v3.0/search/?apikey={apikey}&from={departure_city.yandex_code}&to={destination_city.yandex_code}&format=json&lang=ru_RU&date={date}
     '''))
     data = await fetch_data(url)
-    print(data, "16")
     flights = []
     res_origin, res_arrival = '', ''
     for segment in data['segments']:
@@ -43,7 +42,7 @@ async def get_flight_data(departure: str, destination: str, date: str):
             company = segment['thread']['carrier']['title']
         except:
             company = None
-        print(origin, destination, "nothing found")
+        # print(origin, destination, "nothing found")
         flights.append(TFlight(
             origin_city_code=departure_city.yandex_code,
             destination_city_code=destination_city.yandex_code,
@@ -56,7 +55,6 @@ async def get_flight_data(departure: str, destination: str, date: str):
         ))
     session.add_all(flights)
     session.commit()
-    print()
     return res_origin, res_arrival
 
 
@@ -73,7 +71,7 @@ async def fetch_data(url:str):
 
 async def suggest(city:str):
     res = await get_suggestion(city)
-    print(res[1][0])
+    # print(res[1][0])
     return res[1][0]
 
 async def compile_message(origin:str, destination:str, date:str):

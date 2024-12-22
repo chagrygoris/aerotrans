@@ -1,6 +1,8 @@
 from .models import User, session, TFlight, TCart
 from sqlalchemy import select
 from sqlalchemy import DateTime
+from datetime import datetime
+from typing import Union
 
 def already_registered(name: str, email: str, telegram_id: int) -> bool:
     stmt = select(User).where(
@@ -11,14 +13,17 @@ def already_registered(name: str, email: str, telegram_id: int) -> bool:
     return session.execute(stmt).first() is not None
 
 
-def have_saved_routes(origin: str, destination: str, date: str) -> bool | TFlight:
+def have_saved_routes(origin: str, destination: str, date: str) -> Union[bool, TFlight]:
+    date_obj = datetime.strptime(date, "%Y-%m-%d")
     res = session.query(TFlight).filter(
         TFlight.origin_city_code == origin,
-        TFlight.destination_city_code == destination).first()
+        TFlight.destination_city_code == destination,
+        TFlight.departure_time >= date_obj,
+        TFlight.departure_time < date_obj.replace(hour=23, minute=59, second=59)  # ограничение до конца дня
+    ).first()
     if not res:
         return False
     return res
-
 
 
 def cart_item_exists(user_id: int, flight_id: int) -> bool:

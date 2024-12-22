@@ -141,7 +141,7 @@ async def logout(request: Request):
 
 
 @app.post("/search", response_class=HTMLResponse)
-async def user_request(request: Request, fr: str = Form(), to: str = Form(), date: str = Form()):
+async def user_request(request: Request, fr: str = Form(), to: str = Form(), date: str = Form(), limit: int = Form(10) ):
     name = request.session.get("name")
     email = request.session.get("email")
 
@@ -155,6 +155,7 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
     request.session["from_city"] = fr
     request.session["to_city"] = to
     request.session["date"] = date
+    request.session["limit"] = limit
 
     new_request = TRequest(user_id=user.id, from_city=fr, to_city=to, date=date)
     session.add(new_request)
@@ -170,12 +171,13 @@ async def search_results(request: Request):
     fr = request.session.get("from_city")
     to = request.session.get("to_city")
     date = request.session.get("date")
+    limit = request.session.get("limit")
     from_city = await get_city(fr)
     to_city = await get_city(to)
     if not have_saved_routes(from_city, to_city, date):
         await get_flight_data(fr, to, date)
     flight_rectangles = await create_rectangles(request.session.get("from_city"), request.session.get("to_city"),
-                                                session)
+                                                session, limit)
     return templates.TemplateResponse("search_results.html", {
         "request": request,
         "flight_rectangles": flight_rectangles

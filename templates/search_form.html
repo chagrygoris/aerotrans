@@ -12,23 +12,16 @@
         
         <form method="post" action="/search">
             <label for="fr">Откуда:</label>
-            <select id="fr" name="fr" required>
-                <option value="" disabled selected>Выберите пункт отправления</option>
-                <option value="Москва">Москва</option>
-                <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Одинцово">Одинцово</option>
-            </select>
+            <input type="text" id="fr" name="fr" placeholder="Введите пункт отправления" required>
 
             <label for="to">Куда:</label>
-            <select id="to" name="to" required>
-                <option value="" disabled selected>Выберите пункт назначения</option>
-                <option value="Москва">Москва</option>
-                <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Одинцово">Одинцово</option>
-            </select>
-            
+            <input type="text" id="to" name="to" placeholder="Введите пункт назначения" required>
+
             <label for="date">Дата:</label>
             <input type="date" id="date" name="date" required>
+
+            <label for="limit">Количество рейсов (опционально):</label>
+            <input type="number" id="limit" name="limit" placeholder="Введите количество рейсов" min="1" step="1">
 
             <div class="button-container">
                 <button type="submit">Поиск</button>
