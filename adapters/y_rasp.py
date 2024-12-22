@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from src import TFlight, session
 from src import have_saved_routes
+from aiogram import html
 from config import Config
 
 load_dotenv()
@@ -42,6 +43,10 @@ async def get_flight_data(departure: str, destination: str, date: str):
             company = segment['thread']['carrier']['title']
         except:
             company = None
+        try:
+            transport_type = segment['thread']['transport_type']
+        except:
+            transport_type = None
         # print(origin, destination, "nothing found")
         flights.append(TFlight(
             origin_city_code=departure_city.yandex_code,
@@ -51,7 +56,8 @@ async def get_flight_data(departure: str, destination: str, date: str):
             departure_time=departure_time,
             arrival_time=arrival_time,
             price=price,
-            company=company
+            company=company,
+            transport_type=transport_type
         ))
     session.add_all(flights)
     session.commit()
@@ -74,14 +80,38 @@ async def suggest(city:str):
     # print(res[1][0])
     return res[1][0]
 
-async def compile_message(origin:str, destination:str, date:str):
-    res = have_saved_routes(origin, destination, date)
-    if not res:
-        origin, destination = await get_flight_data(origin, destination, date)
-        res = session.query(TFlight).filter_by(origin=origin, destination=destination).first()
-    return f'''{res.origin} to {res.destination}\n departure on {res.departure_time}, arrival on {res.arrival_time}\nprice is {res.price}, carrier: {res.company}'''
+
+def get_icon(transport:str) -> str:
+    if transport == 'plane':
+        return '✈️'
+    if transport == 'train':
+        return '🚆'
+    if transport == 'suburban':
+        return '🚇'
+    if transport == 'bus':
+        return '🚌'
+    if transport == 'helicopter':
+        return '🚁'
+    if transport == 'water':
+        return '🛳️'
 
 
+async def compile_message(origin: str, destination: str, date: str) -> str:
+    from src import get_city
+    from adapters import format_datetime
+    results = have_saved_routes(origin, destination, date)
+    if not results:
+        await get_flight_data(origin, destination, date)
+        dep_code = await get_city(origin)
+        dest_code = await get_city(destination)
+        results = session.query(TFlight).filter_by(origin_city_code=dep_code, destination_city_code=dest_code).all()
+    message = ''''''
+    for i in range(min(5, len(results))):
+        res = results[i]
+        message += (html.bold(f"{i+1})") + get_icon(res.transport_type) + f''' {res.origin_city_name} -> {res.destination_city_name} \nОтправление {format_datetime(str(res.departure_time))}\nПрибытие {format_datetime(str(res.arrival_time))}\n''')
+        if res.price:
+            message += f'Цена: от {res.price} рублей\n\n'
+    return message
 
 
 if __name__ == '__main__':
