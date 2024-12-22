@@ -67,7 +67,7 @@ class TCart(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     flight_id = Column(Integer, ForeignKey("t_flights.flight_id"))
 
-Base.metadata.drop_all(bind= engine)
+# Base.metadata.drop_all(bind= engine)
 Base.metadata.create_all(bind= engine)
 
 Session = sessionmaker(bind=engine)

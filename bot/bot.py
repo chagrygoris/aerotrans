@@ -7,17 +7,17 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
+from aiogram.utils.keyboard import *
 from src import session, User
 import os, logging, asyncio, sys, dotenv
 from src.constants import help_message
 from config import Config
 from fastapi import Request
+from inline_handlers import inline_router
 dotenv.load_dotenv()
 
-text_router = Router()
-
 dp = Dispatcher()
-
+dp.include_router(inline_router)
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -45,6 +45,8 @@ async def routefinder(message: Message, command: CommandObject):
     elif len(commands) == 2:
         departure, destination = commands
         date = datetime.datetime.today()
+    else:
+        await message.answer(f"пожалуйста, введите команду в формате /route откуда куда YYYY-MM-DD")
     await message.answer(f"Finding routes {departure} ---> {destination}")
     await message.answer(str(await compile_message(departure, destination, date)))
 
@@ -54,22 +56,24 @@ async def routefinder(message: Message, command: CommandObject):
 async def choose_route(message: Message, command: CommandObject):
     commands = command.args.split()
     if len(commands) != 3:
-        await message.answer("Пожалуйста, отправьте команду в формате: /choose откуда куда дата")
+        await message.answer("Пожалуйста, отправьте команду в формате: /choose откуда куда YYYY-MM-DD")
         return
     departure, destination, date = commands
     user_telegram_id = message.from_user.id
     user = session.query(User).filter_by(telegram_id=user_telegram_id).first()
+    builder = InlineKeyboardBuilder()
     if not user:
-        await message.answer(
-            f"[Билеты из {departure} в {destination} уже ждут на сайте!](https://a5cf-185-200-105-117.ngrok-free.app/sign_up?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id})",
-            parse_mode="markdown"
+        builder.row(InlineKeyboardButton(
+            text=f"Завершите регистрацию и продолжите выбор!", url=f"https://a5cf-185-200-105-117.ngrok-free.app/sign_up?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id})")
         )
-        return
-
-    search_url = f"https://a5cf-185-200-105-117.ngrok-free.app/search/results?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id}"
+    else:
+        search_url = f"https://a5cf-185-200-105-117.ngrok-free.app/search/results?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id}"
+        builder.row(InlineKeyboardButton(
+            text=f"Продолжите выбор", url=search_url)
+        )
     await message.answer(
-        f"[Билеты из {departure} в {destination} уже ждут на сайте!]({search_url})",
-        parse_mode="markdown"
+        text=f'Билеты из {departure} в {destination} уже ждут на сайте!',
+        reply_markup=builder.as_markup(),
     )
 
 
