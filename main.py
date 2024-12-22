@@ -55,23 +55,18 @@ async def home(request: Request):
 @app.get("/sign_up", response_class=HTMLResponse)
 async def sign_up_form(request: Request, from_city: str = Query(None), to_city: str = Query(None),
                        date: str = Query(None), telegram_id: int = Query(None)):
-    context = {
+    return templates.TemplateResponse("form.html", {
         "request": request,
-    }
-    if from_city is not None:
-        context["from_city"] = from_city
-    if to_city is not None:
-        context["to_city"] = to_city
-    if date is not None:
-        context["date"] = date
-    if telegram_id is not None:
-        context["telegram_id"] = telegram_id
-    return templates.TemplateResponse("form.html", context)
+        "from_city": from_city,
+        "to_city": to_city,
+        "date": date,
+        "telegram_id": telegram_id
+    })
 
 @app.post("/sign_up", response_class=HTMLResponse)
 async def register_user(request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...),
                         from_city: str = Form(None), to_city: str = Form(None), date: str = Form(None),
-                        telegram_id = Query(None)):
+                        telegram_id = Form(None)):
     print(telegram_id, from_city, to_city)
     if session.query(User).filter_by(email=email).first():
         return templates.TemplateResponse("form.html", {
@@ -90,8 +85,10 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
 
     request.session["name"] = user.name
     request.session["email"] = user.email
+    request.session["telegram_id"] = user.telegram_id
 
     if from_city and to_city and date:
+        print("saved")
         request.session["from_city"] = from_city
         request.session["to_city"] = to_city
         request.session["date"] = date
@@ -189,7 +186,7 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
 
 @app.api_route("/search/results", methods=["GET", "POST"], response_class=HTMLResponse)
 async def search_results(request: Request):
-    if request.method == "GET":
+    if request.method == "GET" and not request.session.get("telegram_id"):
         from_city = request.query_params.get("from_city")
         to_city = request.query_params.get("to_city")
         date = request.query_params.get("date")
