@@ -79,16 +79,13 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
 
     if telegram_id:
         user.telegram_id = telegram_id
-
     session.add(user)
     session.commit()
-
     request.session["name"] = user.name
     request.session["email"] = user.email
-    request.session["telegram_id"] = user.telegram_id
 
-    if from_city and to_city and date:
-        print("saved")
+    if from_city != "None" and to_city != "None" and date != "None":
+        request.session["telegram_id"] = user.telegram_id
         request.session["from_city"] = from_city
         request.session["to_city"] = to_city
         request.session["date"] = date
@@ -202,12 +199,6 @@ async def search_results(request: Request):
         from_city = request.session.get("from_city")
         to_city = request.session.get("to_city")
         date = request.session.get("date")
-
-    if not from_city or not to_city or not date:
-        return templates.TemplateResponse("form.html", {
-            "request": request,
-            "error": "Не все необходимые параметры были предоставлены"
-        }, status_code=400)
 
     limit = request.session.get("limit", 10)
     from_city_db = await get_city(from_city)
