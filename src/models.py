@@ -53,6 +53,7 @@ class TFlight(Base):
     destination_city_name = Column(String)
     departure_time = Column(DateTime)
     arrival_time = Column(DateTime)
+    transport_type = Column(String)
     price = Column(Float)
     company = Column(String)
 
