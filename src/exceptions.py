@@ -1,0 +1,2 @@
+class UnknownCityException(Exception):
+    pass

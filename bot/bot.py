@@ -61,7 +61,7 @@ async def routefinder(message: Message, command: CommandObject):
         await message.answer(str(await compile_message(departure, destination, date)))
     except UnknownCityException:
         await message.answer(f"Не удалось найти рейсы. Пожалуйста, проверьте корректность введенных данных")
-        
+
 
 
 @route_router.message(Command("cart"))
