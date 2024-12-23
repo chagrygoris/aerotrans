@@ -13,6 +13,7 @@ from src.exceptions import UnknownCityException
 from aiogram import html
 from config import Config
 
+
 load_dotenv()
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 os.environ["SSL_CERT_FILE"] = certifi.where()
@@ -20,6 +21,7 @@ apikey = '28e3cb6e-cc7b-4d8a-b64c-8a52a70365fc'
 #apikey = Config.YANDEX_RASP_KEY
 
 async def get_flight_data(departure: str, destination: str, date: str):
+    from adapters import fetch_data
     from src import get_or_create_city
     departure_city = await get_or_create_city(departure)
     destination_city = await get_or_create_city(destination)
@@ -27,6 +29,7 @@ async def get_flight_data(departure: str, destination: str, date: str):
         https://api.rasp.yandex.net/v3.0/search/?apikey={apikey}&from={departure_city.yandex_code}&to={destination_city.yandex_code}&format=json&lang=ru_RU&date={date}
     '''))
     data = await fetch_data(url)
+    print(data)
     flights = []
     res_origin, res_arrival = '', ''
     for segment in data['segments']:
@@ -71,10 +74,7 @@ async def get_suggestion(city:str):
             res = await resp.json()
     return res
 
-async def fetch_data(url:str):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            return await resp.json()
+
 
 async def suggest(city:str) -> int | None:
     res = await get_suggestion(city)
