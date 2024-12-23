@@ -2,7 +2,7 @@ from datetime import datetime
 from src.models import TFlight
 from sqlalchemy.orm import Session
 from typing import List
-from adapters.y_rasp import suggest
+from adapters.yrasp import suggest
 import locale
 
 def format_datetime(iso_datetime: str) -> str:

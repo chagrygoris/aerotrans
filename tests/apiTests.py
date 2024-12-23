@@ -1,12 +1,12 @@
 from unittest.mock import AsyncMock, patch, MagicMock
 import aiohttp
-from adapters.y_rasp import get_flight_data, get_suggestion, get_icon, suggest, compile_message
+from adapters.yrasp import get_flight_data, get_suggestion, get_icon, suggest, compile_message
 import pytest
 from unittest.mock import MagicMock
 from aioresponses import aioresponses
 from src import session, TFlight
 from src.exceptions import UnknownCityException
-from adapters.y_rasp import get_flight_data, suggest
+from adapters.yrasp import get_flight_data, suggest
 async def fetch_data(url:str):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:

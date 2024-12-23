@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 from src import User, TRequest, TFlight, TCart
 from src import already_registered, add_flight, add_to_cart, add_user, cart_item_exists, have_saved_routes
-from adapters.view_results import create_rectangles
+from adapters.viewResults import create_rectangles
 from unittest.mock import MagicMock
 from sqlalchemy.orm import Session
 

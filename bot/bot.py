@@ -91,10 +91,10 @@ async def choose_route(message: Message, command: CommandObject):
     builder = InlineKeyboardBuilder()
     if not user:
         builder.row(InlineKeyboardButton(
-            text=f"Завершите регистрацию и продолжите выбор!", url=f"https://a5cf-185-200-105-117.ngrok-free.app/sign_up?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id})")
+            text=f"Завершите регистрацию и продолжите выбор!", url=f"https://101f-185-200-105-117.ngrok-free.app/sign_up?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id}")
         )
     else:
-        search_url = f"https://a5cf-185-200-105-117.ngrok-free.app/search/results?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id}"
+        search_url = f"https://101f-185-200-105-117.ngrok-free.app/search/results?from_city={departure}&to_city={destination}&date={date}&telegram_id={user_telegram_id}"
         builder.row(InlineKeyboardButton(
             text=f"Продолжите выбор", url=search_url)
         )

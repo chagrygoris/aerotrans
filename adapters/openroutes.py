@@ -1,4 +1,4 @@
-from y_rasp import fetch_data
+from yrasp import fetch_data
 import os
 
 
