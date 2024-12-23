@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 import bcrypt
 import base64
 import os
+from pathlib import Path
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import sessionmaker
@@ -29,8 +30,8 @@ templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "t
 app.add_middleware(SessionMiddleware, secret_key="your-secret-key")  # type: ignore
 SessionLocal = sessionmaker(autocommit=False, autoflush=False)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
+static_path = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 class UserRequest(BaseModel):
     name: str
