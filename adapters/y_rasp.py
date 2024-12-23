@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from src import TFlight, session
 from src import have_saved_routes
+from src.exceptions import UnknownCityException
 from aiogram import html
 from config import Config
 
@@ -75,10 +76,13 @@ async def fetch_data(url:str):
         async with session.get(url) as resp:
             return await resp.json()
 
-async def suggest(city:str):
+async def suggest(city:str) -> int | None:
     res = await get_suggestion(city)
     # print(res[1][0])
-    return res[1][0]
+    try:
+        return res[1][0]
+    except:
+        raise UnknownCityException(f"{city}")
 
 
 def get_icon(transport:str) -> str:

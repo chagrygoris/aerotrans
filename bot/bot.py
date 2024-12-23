@@ -12,6 +12,7 @@ from src import session, User
 from src.constants import empty_cart_message, ending
 import os, logging, asyncio, sys, dotenv
 from src.constants import help_message
+from src.exceptions import UnknownCityException
 from config import Config
 from fastapi import Request
 from inline_handlers import inline_router, describe_cart, is_date
@@ -40,7 +41,13 @@ dp.include_router(route_router)
 @route_router.message(Command("route"))
 async def routefinder(message: Message, command: CommandObject):
     from adapters import compile_message
-    commands = command.args.split()
+    try:
+        commands = command.args.split()
+        assert len(commands) == 3
+        assert is_date(commands[2])
+    except:
+        await message.answer("Пожалуйста, отправьте команду в формате: /choose откуда куда YYYY-MM-DD")
+        return
     departure, destination, date = '', '', ''
     if len(commands) == 3:
         departure, destination, date = commands
@@ -50,7 +57,11 @@ async def routefinder(message: Message, command: CommandObject):
     else:
         await message.answer(f"пожалуйста, введите команду в формате /route откуда куда YYYY-MM-DD")
     await message.answer(f"Finding routes {departure} ---> {destination}")
-    await message.answer(str(await compile_message(departure, destination, date)))
+    try:
+        await message.answer(str(await compile_message(departure, destination, date)))
+    except UnknownCityException:
+        await message.answer(f"Не удалось найти рейсы. Пожалуйста, проверьте корректность введенных данных")
+        
 
 
 @route_router.message(Command("cart"))
