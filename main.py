@@ -20,7 +20,6 @@ from adapters import create_rectangles
 logging.basicConfig(filename='logs', filemode='w')
 logging.getLogger().setLevel(logging.INFO)
 
-from bot import send_welcome_message, send_request
 
 from src import get_city
 
@@ -118,7 +117,6 @@ async def telegram_auth(request: Request, id: int = Query(...)):
         return HTMLResponse("User not found", status_code=404)
     user.telegram_id = telegram_id
     session.commit()
-    send_welcome_message(user.telegram_id, user.name)
     return RedirectResponse(url="/search")
 
 
@@ -178,7 +176,6 @@ async def user_request(request: Request, fr: str = Form(), to: str = Form(), dat
     session.commit()
     logging.info(f"User {name} made a new request: {fr} : {to} : {date}")
     last_request = session.query(TRequest).filter_by(user_id=user.id).order_by(TRequest.request_id.desc()).first()
-    send_request(user.telegram_id, last_request.from_city, last_request.to_city, last_request.date)
     return RedirectResponse(url="/search/results")
 
 
