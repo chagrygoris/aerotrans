@@ -1,6 +1,6 @@
 <p style="font-size: 25px; text-align: center;"><b>Платформа умного поиска билетов для путешествий.</b></p>
 
-<p style="font-size: 20px;"><u>Описание проекта.</u></p>
+<p style="font-size: 20px;"><u>[Презентация проекта](github.com/chagrygoris/aerotrans/DESCRIPTION.pdf)</u></p>
 <p style="font-size: 18px;"><b>User interface. Возможности пользователя.</b></p>
 
     1. Веб-сервис.
